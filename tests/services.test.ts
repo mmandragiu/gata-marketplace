@@ -1,11 +1,10 @@
 /**
  * Integration tests: real PostgreSQL (PGlite) + the Supabase migration + RLS + triggers + services.
- * Run with `npm test`.
+ * Run with `npm test` (PGlite) or `npm run test:pg` (postgres.js against TEST_DATABASE_URL, see helpers.ts).
  */
 import assert from "node:assert/strict";
 import { after, before, describe, it } from "node:test";
 
-import { createPgliteDb } from "@/lib/db/pglite";
 import type { Db } from "@/lib/db/types";
 import { seedDemoDatabase } from "@/lib/seed";
 import * as admin from "@/lib/services/admin";
@@ -20,6 +19,8 @@ import * as reports from "@/lib/services/reports";
 import * as reviews from "@/lib/services/reviews";
 import { getPlatformStats } from "@/lib/services/stats";
 import type { Ctx } from "@/lib/services/types";
+
+import { createTestDb } from "./helpers";
 
 let db: Db;
 
@@ -51,7 +52,7 @@ const GELU = "gelu.tudose@example.com";
 const ADMIN = "admin@example.com";
 
 before(async () => {
-  db = await createPgliteDb();
+  db = await createTestDb();
   const summary = await seedDemoDatabase(db);
   assert.deepEqual(summary.bannedUsers, ["Cristian Vasile"]);
 });

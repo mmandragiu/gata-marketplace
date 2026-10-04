@@ -2,42 +2,9 @@ import { PGlite } from "@electric-sql/pglite";
 import { unaccent } from "@electric-sql/pglite/contrib/unaccent";
 import { vector } from "@electric-sql/pglite-pgvector";
 
+import { AUTH_STUB_SQL, EXTENSIONS_GRANT_SQL } from "./auth-stub";
 import { readMigrations } from "./migrations";
 import { claimsFor, SET_ROLE_SQL, type Db, type Queryable, type Row } from "./types";
-
-/**
- * Minimal stand-in for the Supabase `auth` schema so the same migration and RLS policies
- * run inside the embedded database. auth.uid() matches Supabase's implementation.
- */
-const AUTH_STUB_SQL = `
-create schema if not exists auth;
-
-create table if not exists auth.users (
-  id uuid primary key default gen_random_uuid(),
-  email text unique,
-  raw_user_meta_data jsonb not null default '{}'::jsonb,
-  created_at timestamptz not null default now()
-);
-
-create or replace function auth.uid() returns uuid
-language sql stable as $$
-  select nullif(
-    coalesce(
-      nullif(current_setting('request.jwt.claim.sub', true), ''),
-      (nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'sub')
-    ),
-    ''
-  )::uuid
-$$;
-
-do $$ begin create role anon nologin; exception when duplicate_object then null; end $$;
-do $$ begin create role authenticated nologin; exception when duplicate_object then null; end $$;
-
-grant usage on schema auth to anon, authenticated;
-grant execute on function auth.uid() to anon, authenticated;
-`;
-
-const EXTENSIONS_GRANT_SQL = `grant usage on schema extensions to anon, authenticated;`;
 
 function wrap(tx: { query: <T>(q: string, p?: unknown[]) => Promise<{ rows: T[] }> }): Queryable {
   return {

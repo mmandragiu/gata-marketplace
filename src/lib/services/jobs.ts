@@ -63,7 +63,7 @@ export async function createJob(ctx: Ctx, raw: unknown): Promise<string> {
       if (!category[0]) throw new AppError("VALIDATION", "Categoria nu există.", { categorySlug: "Categoria nu există." });
 
       const tags = await q.query<{ id: string; slug: string }>(
-        "select id, slug from public.tags where slug in (select jsonb_array_elements_text($1::jsonb))",
+        "select id, slug from public.tags where slug in (select jsonb_array_elements_text($1::text::jsonb))",
         [JSON.stringify(input.tagSlugs)],
       );
       if (tags.length !== new Set(input.tagSlugs).size) {

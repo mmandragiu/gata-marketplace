@@ -36,7 +36,7 @@ export async function getWorker(ctx: Ctx, profileId: string): Promise<Worker | n
 export async function getWorkersByIds(ctx: Ctx, ids: string[]): Promise<Worker[]> {
   if (ids.length === 0) return [];
   const rows = await ctx.db.asUser(viewerAuthId(ctx), (q) =>
-    q.query(`${WORKER_SELECT} where p.id in (select (jsonb_array_elements_text($1::jsonb))::uuid)`, [JSON.stringify(ids)]),
+    q.query(`${WORKER_SELECT} where p.id in (select (jsonb_array_elements_text($1::text::jsonb))::uuid)`, [JSON.stringify(ids)]),
   );
   return rows.map(mapWorker);
 }
@@ -84,7 +84,7 @@ export async function updateMyProfile(ctx: Ctx, raw: unknown): Promise<void> {
     await ctx.db.asUser(viewer.authUserId, async (q) => {
       if (input.tags.length > 0) {
         const known = await q.query<{ slug: string }>(
-          "select slug from public.tags where slug in (select jsonb_array_elements_text($1::jsonb))",
+          "select slug from public.tags where slug in (select jsonb_array_elements_text($1::text::jsonb))",
           [JSON.stringify(input.tags.map((t) => t.slug))],
         );
         const knownSet = new Set(known.map((k) => k.slug));

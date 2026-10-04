@@ -98,7 +98,7 @@ export async function seedDatabase(db: Db, createUser: CreateUserFn): Promise<Se
            premium_since = case when $6::boolean then now() - interval '30 days' else null end,
            boost_level = case when $6::boolean then 1 else 0 end,
            is_verified = $7::boolean, is_admin = $8::boolean, license_info = $9,
-           hourly_rate = $10::int, portfolio = $11::jsonb,
+           hourly_rate = $10::int, portfolio = $11::text::jsonb,
            created_at = now() - make_interval(months => $12::int)
          where user_id = $1
          returning id`,

@@ -51,7 +51,7 @@ OpenAPI 3.1 · MCP server · Docker
 | **Moderation panel** | Reports queue, manual ban/unban (with counter reset), "verified" badges, auto-ban threshold, demo reset. |
 | **Monetization** | Ad banners for free users. **Premium, $9.99/month** (mock checkout): no ads, pinned jobs, boosted ranking and a "Promovat/Recomandat" badge on bids and profiles. |
 | **UX** | Mobile-first, dark and light themes, optimistic UI, toasts, empty states, accessible Radix primitives. |
-| **For developers** | REST API with an OpenAPI 3.1 spec (`/docs`), an MCP server for AI assistants, Docker image, 27 integration tests on real PostgreSQL. |
+| **For developers** | REST API with an OpenAPI 3.1 spec (`/docs`), an MCP server for AI assistants, Docker image, 33 integration tests on real PostgreSQL. |
 
 ## Quick start (demo mode, zero config)
 
@@ -261,17 +261,27 @@ cookie as the UI.
 ## Testing
 
 ```bash
-npm test              # 27 integration tests on real PostgreSQL (PGlite) with the actual migration
+npm test              # 33 integration tests on real PostgreSQL (PGlite) with the actual migration
 npm run typecheck     # next typegen + tsc
 npm run lint
 npm run build
 npm run mcp:smoke     # with the app running
 ```
 
-The tests cover RLS (bids and contacts visibility, chat access), the full lifecycle (post → bid → accept → chat →
-complete → mutual reviews → rating trigger), banned-user restrictions at the database level, the 5th-report
-auto-ban, duplicate and self reports, the admin-only moderation panel, filters, Premium, AI matching (including
-the licence penalty) and concurrent transactions.
+- `tests/services.test.ts` covers RLS (bids and contacts visibility, chat access), the full lifecycle (post → bid →
+  accept → chat → complete → mutual reviews → rating trigger), banned-user restrictions at the database level,
+  the 5th-report auto-ban, duplicate and self reports, the admin-only moderation panel, search filters, Premium,
+  local AI matching (including the licence penalty) and concurrent transactions.
+- `tests/openai.test.ts` runs the OpenAI path against an in-process mock of the OpenAI API: embeddings stored in
+  pgvector and ranked by cosine similarity, re-embedding only changed texts, the JSON-mode LLM analysis with
+  validation and caching, and the local fallbacks when the API fails or returns invalid output.
+- `npm run test:pg` runs the same tests through **postgres.js, the driver used in Supabase mode**, against the
+  database in `TEST_DATABASE_URL`. It must be a disposable local Postgres with pgvector, and **it is wiped**:
+  ```bash
+  docker run --rm -e POSTGRES_PASSWORD=pg -p 5433:5432 pgvector/pgvector:pg17
+  TEST_DATABASE_URL=postgres://postgres:pg@localhost:5433/postgres npm run test:pg
+  ```
+  Set `DB_POOL_MAX=1` for servers that accept a single connection, such as PGlite's socket server.
 
 ## Deploying
 

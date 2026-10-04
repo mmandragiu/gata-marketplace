@@ -61,7 +61,7 @@ async function ensureEmbeddings(db: Db, items: EmbedItem[]): Promise<void> {
     q.query<{ owner_type: string; owner_id: string; content_hash: string }>(
       `select e.owner_type, e.owner_id, e.content_hash
        from public.embeddings e
-       join jsonb_to_recordset($1::jsonb) as x(t text, id uuid) on e.owner_type = x.t and e.owner_id = x.id`,
+       join jsonb_to_recordset($1::text::jsonb) as x(t text, id uuid) on e.owner_type = x.t and e.owner_id = x.id`,
       [JSON.stringify(hashed.map((i) => ({ t: i.ownerType, id: i.ownerId })))],
     ),
   );
@@ -75,7 +75,7 @@ async function ensureEmbeddings(db: Db, items: EmbedItem[]): Promise<void> {
       const m = missing[k];
       await q.query(
         `insert into public.embeddings (owner_type, owner_id, model, content_hash, embedding, updated_at)
-         values ($1, $2, $3, $4, $5::extensions.vector, now())
+         values ($1, $2, $3, $4, $5::text::extensions.vector, now())
          on conflict (owner_type, owner_id) do update
            set model = excluded.model, content_hash = excluded.content_hash,
                embedding = excluded.embedding, updated_at = now()`,
@@ -120,7 +120,7 @@ async function jobSimilarities(ctx: Ctx, worker: Worker, jobs: Job[]): Promise<S
            from public.embeddings w
            join public.embeddings j on j.owner_type = 'job'
            where w.owner_type = 'profile' and w.owner_id = $1
-             and j.owner_id in (select (jsonb_array_elements_text($2::jsonb))::uuid)`,
+             and j.owner_id in (select (jsonb_array_elements_text($2::text::jsonb))::uuid)`,
           [worker.id, JSON.stringify(jobs.map((j) => j.id))],
         ),
       );
