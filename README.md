@@ -114,13 +114,14 @@ website, logo, plumbing), 22 bids, 16 reviews and 9 reports. All people, e-mails
 ```mermaid
 flowchart LR
   UI["Browser: Next.js App Router UI"] -->|Server Actions| SVC["Service layer (src/lib/services)"]
-  REST["REST clients"] -->|"/api/* (OpenAPI 3.1)"| SVC
-  MCP["MCP server (mcp/server.ts)"] -->|HTTP| REST
+  MCP["MCP server (mcp/server.ts)"] -->|HTTP| API["REST API /api/* (OpenAPI 3.1)"]
+  EXT["Other REST clients"] -->|HTTP| API
+  API --> SVC
   SVC -->|"per-request transaction: SET ROLE + JWT claims"| DB[("PostgreSQL: RLS, triggers, RPCs, pgvector")]
   SVC --> MATCH["Matching engine: tags + semantic + location"]
   MATCH -->|optional| OAI["OpenAI: embeddings + gpt-4o-mini"]
-  DB -. demo mode .- PGL["PGlite, in-process"]
-  DB -. supabase mode .- SB["Supabase Postgres + Auth + Realtime"]
+  DB -. demo mode .-> PGL["PGlite, in-process"]
+  DB -. supabase mode .-> SB["Supabase Postgres + Auth + Realtime"]
 ```
 
 - **One schema, two runtimes.** `supabase/migrations/*.sql` is the single source of truth. In demo mode it runs
