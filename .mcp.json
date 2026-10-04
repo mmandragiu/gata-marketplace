@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "gata": {
+      "command": "node",
+      "args": ["--import", "tsx", "mcp/server.ts"],
+      "env": {
+        "GATA_API_URL": "http://localhost:3000"
+      }
+    }
+  }
+}

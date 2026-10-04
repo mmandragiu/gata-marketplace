@@ -1,0 +1,15 @@
+node_modules
+.next
+.git
+.gitignore
+.claude
+.vercel
+.env*
+!.env.example
+*.tsbuildinfo
+next-env.d.ts
+npm-debug.log*
+coverage
+Dockerfile
+docker-compose.yml
+.dockerignore
